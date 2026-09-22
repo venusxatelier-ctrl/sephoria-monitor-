@@ -96,23 +96,19 @@ def check_url(url, state):
 
     text_hash, looks_available = extract_signal(html)
     prev = state.get(url, {})
-    prev_hash = prev.get("hash")
     was_available = prev.get("looks_available", False)
 
-    if prev_hash is None:
-        print(f"[{datetime.now()}] Baseline captured for {url} (looks_available={looks_available})")
-    elif text_hash != prev_hash:
-        print(f"[{datetime.now()}] CHANGE detected on {url}")
-        if looks_available and not was_available:
-            notify("🎟️ SEPHORiA London — tickets may be available!",
-                   f"Availability signal detected on the resale page. Check now:\n{url}",
-                   url, priority="urgent")
-        else:
-            notify("SEPHORiA London page changed",
-                   f"The resale page content changed — worth a manual check:\n{url}",
-                   url, priority="default")
-    else:
-        print(f"[{datetime.now()}] No change on {url}")
+    status = "AVAILABLE ✅" if looks_available else "Sold out ❌"
+    print(f"[{datetime.now()}] {url} -> {status}")
+
+    # Only notify on the transition into "available" — silent otherwise.
+    if looks_available and not was_available:
+        notify(
+            "🎟️ SEPHORiA London — tickets may be available!",
+            f"Availability signal detected. Check now:\n{url}",
+            url,
+            priority="urgent",
+        )
 
     state[url] = {"hash": text_hash, "looks_available": looks_available}
 
